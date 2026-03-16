@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # Telegram Bot
+  telegram-bot:
+    build:
+      context: ./telegram_bot
+      dockerfile: Dockerfile
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - API_BASE_URL=http://backend:8000/api
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=land_liquidity_telegram
+      - DB_USER=postgres
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - NOTIFICATIONS_ENABLED=true
+      - NOTIFICATION_CHECK_INTERVAL=3600
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./telegram_bot/logs:/app/logs
+    depends_on:
+      - backend
+      - postgres
+    restart: unless-stopped
+    networks:
+      - likvid-network
+
+  # База данных для Telegram бота (если нужна отдельная)
+  postgres-telegram:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: land_liquidity_telegram
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_telegram_data:/var/lib/postgresql/data
+    networks:
+      - likvid-network
+
+volumes:
+  postgres_telegram_data:
+
+networks:
+  likvid-network:
+    external: true
